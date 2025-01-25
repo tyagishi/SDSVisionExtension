@@ -13,7 +13,6 @@ import SwiftUI
 
 // Note: origin in Vision  is lower-left
 //       origin in SwiftUI is upper-left
-
 extension VNDetectedObjectObservation {
     func unNormalizeRect(in imageSize: CGSize) -> CGRect {
         let rectSize = rectSize(in: imageSize)
