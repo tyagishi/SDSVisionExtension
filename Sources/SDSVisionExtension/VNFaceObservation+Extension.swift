@@ -21,11 +21,11 @@ extension VNFaceObservation {
     }
     
     public func leftRightEyes() -> (left: CGPoint?, right: CGPoint?) {
-        var left:CGPoint? = nil
+        var left: CGPoint? = nil
         if let leftEye = self.landmarks?.leftEye {
             left = self.averagePoint(leftEye)
         }
-        var right:CGPoint? = nil
+        var right: CGPoint? = nil
         if let rightEye = self.landmarks?.rightEye {
             right = self.averagePoint(rightEye)
         }
@@ -39,7 +39,7 @@ struct VNFaceLandmarks: ViewModifier {
     let leftLabel: String
     let rightLabel: String
 
-    init(_ faceObservations:[VNFaceObservation],_ color: Color, _ leftLabel: String, _ rightLabel: String) {
+    init(_ faceObservations: [VNFaceObservation],_ color: Color, _ leftLabel: String, _ rightLabel: String) {
         self.faceObservations = faceObservations
         self.color = color
         self.leftLabel = leftLabel
@@ -81,7 +81,7 @@ struct VNFaceLandmarks: ViewModifier {
 
 extension View {
     public func detectedLeftRightEyes(_ faceObservations: [VNFaceObservation], _ color: Color = Color.green,
-                               _ leftLabel: String = "",_ rightLabel: String = "") -> some View {
+                                      _ leftLabel: String = "",_ rightLabel: String = "") -> some View {
         self.modifier(VNFaceLandmarks(faceObservations, color, leftLabel, rightLabel))
     }
 }

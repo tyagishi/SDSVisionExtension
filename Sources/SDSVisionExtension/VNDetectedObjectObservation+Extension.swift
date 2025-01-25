@@ -37,7 +37,7 @@ extension VNDetectedObjectObservation {
 // Note: origin in Vision  is lower-left
 //       origin in SwiftUI is upper-left
 struct VNDetectedObjectObservationIndicator: ViewModifier {
-    var detectResults:[VNDetectedObjectObservation]
+    var detectResults: [VNDetectedObjectObservation]
     let color: Color
     let label: String
     
