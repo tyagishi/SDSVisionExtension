@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  BoundingBoxProvidingRectangles.swift
 //  SDSVisionExtension
 //
 //  Created by Tomoaki Yagishita on 2025/01/25.
@@ -8,9 +8,10 @@
 import Foundation
 import Vision
 import SwiftUI
+import SDSCGExtension
 
-@available(iOS 18, macOS 15, tvOS 18, *)
-extension FaceObservation {
+@available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+extension BoundingBoxProviding {
     // Note: origin in Vision  is lower-left
     //       origin in SwiftUI is upper-left
     func unNormalizeRect(in imageSize: CGSize) -> CGRect {
@@ -32,12 +33,12 @@ extension FaceObservation {
     }
 }
 
-@available(iOS 18, macOS 15, tvOS 18, *)
-struct FaceObservationRectangles: ViewModifier {
-    var faceObservations: [FaceObservation]
+@available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+struct BoundingBoxProvidingRectangles<T: VisionObservation & BoundingBoxProviding>: ViewModifier {
+    var faceObservations: [T]
     let color: Color
 
-    init(_ faceObservations: [FaceObservation],_ color: Color = .red) {
+    init(_ faceObservations: [T], color: Color) {
         self.faceObservations = faceObservations
         self.color = color
     }
@@ -57,9 +58,78 @@ struct FaceObservationRectangles: ViewModifier {
             )
     }
 }
+
+@available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+public enum InteresetVisionFaceLandmark {
+    case rightEye, leftEye
+    
+    func propRegion(_ faceObservation: FaceObservation) -> FaceObservation.Landmarks2D.Region? {
+        switch self {
+        case .rightEye:
+            return faceObservation.landmarks?.rightEye
+        case .leftEye:
+            return faceObservation.landmarks?.leftEye
+        }
+    }
+}
+
+@available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+struct LandmarkShapes: ViewModifier {
+    var faceObservations: [FaceObservation]
+    let interestTypes: [InteresetVisionFaceLandmark]
+    let color: Color
+
+    init(_ faceObservations: [FaceObservation], interestParts: [InteresetVisionFaceLandmark], color: Color) {
+        self.faceObservations = faceObservations
+        self.interestTypes = interestParts
+        self.color = color
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                ForEach(faceObservations, id: \.uuid) { faceObservation in
+                    ForEach(interestTypes, id: \.self) { type in
+                        if let region = type.propRegion(faceObservation) {
+                            FaceLandmark(region: region).foregroundStyle(color)
+                        }
+                    }
+                }
+            )
+    }
+}
+
 extension View {
-    @available(iOS 18, macOS 15, tvOS 18, *)
-    public func faceRectangles(_ faceObservations: [FaceObservation]) -> some View {
-        self.modifier(FaceObservationRectangles(faceObservations))
+    @available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+    public func visionRectangles(_ faceObservations: [FaceObservation], color: Color = .red) -> some View {
+        self.modifier(BoundingBoxProvidingRectangles(faceObservations, color: color))
+    }
+    @available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+    public func landmarkShapes(_ faceObservations: [FaceObservation], color: Color = .red) -> some View {
+        self.modifier(LandmarkShapes(faceObservations, interestParts: [.leftEye, .rightEye], color: color))
+    }
+
+}
+
+// from Apple
+@available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
+struct FaceLandmark: Shape {
+    let region: FaceObservation.Landmarks2D.Region
+    
+    func path(in rect: CGRect) -> Path {
+        let points = region.pointsInImageCoordinates(rect.size, origin: .upperLeft)
+        let path = CGMutablePath()
+        
+        path.move(to: points[0])
+        
+        for index in 1..<points.count {
+            path.addLine(to: points[index])
+        }
+        
+        if region.pointsClassification == .closedPath {
+            path.closeSubpath()
+        }
+        
+        return Path(path)
     }
 }
