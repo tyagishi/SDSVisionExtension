@@ -61,7 +61,8 @@ struct BoundingBoxProvidingRectangles<T: VisionObservation & BoundingBoxProvidin
 
 @available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
 public enum InteresetVisionFaceLandmark {
-    case rightEye, leftEye
+    case rightEye, leftEye, nose, innerLips, outerLips
+    case medianLine
     
     func propRegion(_ faceObservation: FaceObservation) -> FaceObservation.Landmarks2D.Region? {
         switch self {
@@ -69,6 +70,14 @@ public enum InteresetVisionFaceLandmark {
             return faceObservation.landmarks?.rightEye
         case .leftEye:
             return faceObservation.landmarks?.leftEye
+        case .nose:
+            return faceObservation.landmarks?.nose
+        case .innerLips:
+            return faceObservation.landmarks?.innerLips
+        case .outerLips:
+            return faceObservation.landmarks?.outerLips
+        case .medianLine:
+            return faceObservation.landmarks?.medianLine
         }
     }
 }
@@ -78,11 +87,14 @@ struct LandmarkShapes: ViewModifier {
     var faceObservations: [FaceObservation]
     let interestTypes: [InteresetVisionFaceLandmark]
     let color: Color
+    let lineWidth: CGFloat
 
-    init(_ faceObservations: [FaceObservation], interestParts: [InteresetVisionFaceLandmark], color: Color) {
+    init(_ faceObservations: [FaceObservation], interestParts: [InteresetVisionFaceLandmark],
+         color: Color, lineWidth: CGFloat) {
         self.faceObservations = faceObservations
         self.interestTypes = interestParts
         self.color = color
+        self.lineWidth = lineWidth
     }
     
     func body(content: Content) -> some View {
@@ -91,7 +103,9 @@ struct LandmarkShapes: ViewModifier {
                 ForEach(faceObservations, id: \.uuid) { faceObservation in
                     ForEach(interestTypes, id: \.self) { type in
                         if let region = type.propRegion(faceObservation) {
-                            FaceLandmark(region: region).foregroundStyle(color)
+                            FaceLandmark(region: region)
+                                .stroke(lineWidth: lineWidth)
+                                .foregroundStyle(color)
                         }
                     }
                 }
@@ -101,12 +115,12 @@ struct LandmarkShapes: ViewModifier {
 
 extension View {
     @available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
-    public func visionRectangles(_ faceObservations: [FaceObservation], color: Color = .red) -> some View {
+    public func visionRectangles<T: VisionObservation & BoundingBoxProviding>(_ faceObservations: [T], color: Color = .red) -> some View {
         self.modifier(BoundingBoxProvidingRectangles(faceObservations, color: color))
     }
     @available(macOS 15.0, iOS 18.0, tvOS 18.0, visionOS 2.0, *)
-    public func landmarkShapes(_ faceObservations: [FaceObservation], color: Color = .red) -> some View {
-        self.modifier(LandmarkShapes(faceObservations, interestParts: [.leftEye, .rightEye], color: color))
+    public func landmarkShapes(_ faceObservations: [FaceObservation], parts: [InteresetVisionFaceLandmark], color: Color = .red, lineWidth: CGFloat = 2) -> some View {
+        self.modifier(LandmarkShapes(faceObservations, interestParts: parts, color: color, lineWidth: lineWidth))
     }
 
 }
