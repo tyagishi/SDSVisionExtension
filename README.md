@@ -70,8 +70,7 @@ struct ContentView: View {
 
 ```
 
-### landmarkShapes
-view modifier for result from DetectFaceLandmarksRequest()
+### .landmarkShapes : show result from DetectFaceLandmarksRequest()
 
 
 ## for older Vision APIs which starts with VN
